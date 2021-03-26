@@ -43,7 +43,7 @@ def user2user(cas_emb,cas_emb1, gra_emb,cas_mask, hidden_size, keep_prob):
         direction_mask2 = tf.greater(col, row) # [n,n]
         direction_mask_tile1 = tf.tile(tf.expand_dims(direction_mask1, 0), [bs, 1, 1])     # [b,n,n]
         direction_mask_tile2 = tf.tile(tf.expand_dims(direction_mask2, 0), [bs, 1, 1])
-        length_mask_tile = tf.tile(tf.expand_dims(tf.squeeze(tf.cast(cas_mask,tf.bool),-1), 1), [1, sl, 1])    #中间加的值为n 其余不变为b和n# [b,1,n] -> [b,n,n]
+        length_mask_tile = tf.tile(tf.expand_dims(tf.squeeze(tf.cast(cas_mask,tf.bool),-1), 1), [1, sl, 1])    #
         attention_mask1 = tf.cast(tf.logical_and(direction_mask_tile1, length_mask_tile), tf.float32)         # [b,n,n]
         attention_mask2 = tf.cast(tf.logical_and(direction_mask_tile2, length_mask_tile), tf.float32)         # [b,n,n]
         cas_hidden = dense(cas_emb, hidden_size, tf.nn.elu, keep_prob, 'hidden')* cas_mask# [b,n,d] *cas_mask
@@ -55,8 +55,8 @@ def user2user(cas_emb,cas_emb1, gra_emb,cas_mask, hidden_size, keep_prob):
         head1 = dense(cas_hidden1, hidden_size, tf.identity, keep_prob, 'head1', False)  # [b,n,d]
         tail1= dense(cas_hidden, hidden_size, tf.identity, keep_prob, 'tail1', False)  # [b,n,d]
 
-        matching_logit1 = tf.matmul(head, tf.transpose(tail,perm=[0,2,1])) + (1-attention_mask1) * (-1e30) #mask为1时则消失，如果不mask 则加上平滑
-        attention_score1 = tf.nn.softmax(matching_logit1, -1) * attention_mask1 #softmax把注意力归一化 然后mask的数据搞掉
+        matching_logit1 = tf.matmul(head, tf.transpose(tail,perm=[0,2,1])) + (1-attention_mask1) * (-1e30) #
+        attention_score1 = tf.nn.softmax(matching_logit1, -1) * attention_mask1 #
 
         g_dis_score1 = tf.cast(g_dis_score,tf.float32) * attention_mask1
         attention_score1 = tf.nn.softmax(attention_score1 * g_dis_score1, -1)
@@ -64,18 +64,22 @@ def user2user(cas_emb,cas_emb1, gra_emb,cas_mask, hidden_size, keep_prob):
 
 
         depend_emb1 = tf.matmul(attention_score1, cas_hidden)         # [b,n,d]
-        matching_logit2 = tf.matmul(head1, tf.transpose(tail1,perm=[0,2,1])) + (1-attention_mask2) * (-1e30) #mask为1时则消失，如果不mask 则加上平滑
-        attention_score2 = tf.nn.softmax(matching_logit2, -1) * attention_mask2 #softmax把注意力归一化 然后mask的数据搞掉
+        depend_emb1 = depend_emb1 + cas_hidden
+        matching_logit2 = tf.matmul(head1, tf.transpose(tail1,perm=[0,2,1])) + (1-attention_mask2) * (-1e30) #
+        attention_score2 = tf.nn.softmax(matching_logit2, -1) * attention_mask2 #
 
         g_dis_score2 = tf.cast(g_dis_score,tf.float32) * attention_mask2
         attention_score2 = tf.nn.softmax(attention_score2 * g_dis_score2, -1)
 
         depend_emb2 = tf.matmul(attention_score2, cas_hidden1)         # [b,n,d]
-
+        depend_emb2 = depend_emb2 + cas_hidden1
         fusion_gate1 = dense(tf.concat([depend_emb1, depend_emb2], 2), hidden_size, tf.sigmoid, keep_prob, 'fusion_gate1')  # [b,n,d]
-        depend_emb =  (fusion_gate1*depend_emb1 + (1-fusion_gate1)*depend_emb2)
-        fusion_gate = dense(tf.concat([cas_hidden, depend_emb], 2), hidden_size, tf.sigmoid, keep_prob, 'fusion_gate')
-        return (fusion_gate*cas_hidden + (1-fusion_gate)*depend_emb) * cas_mask #同样也进行了cas_mask最后的结果  # [b,n,d]
+        #depend_emb =  (fusion_gate1*depend_emb1 + (1-fusion_gate1)*depend_emb2)
+        #fusion_gate = dense(tf.concat([cas_hidden, depend_emb], 2), hidden_size, tf.sigmoid, keep_prob, 'fusion_gate')
+        fusion_gate2 = dense(tf.concat([depend_emb1, depend_emb2], 2), hidden_size, tf.sigmoid, keep_prob,'fusion_gate2')
+        return ((1-fusion_gate1)*depend_emb1+(1-fusion_gate2)*depend_emb2)*cas_mask
+
+        #eturn (fusion_gate*cas_hidden + (1-fusion_gate)*depend_emb) * cas_mask # # [b,n,d]
 
 def user2cas(cas_encoding, cas_mask, time_weight, hidden_size, keep_prob):
     with tf.variable_scope('user2cas'):
