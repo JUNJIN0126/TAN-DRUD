@@ -16,7 +16,7 @@ def ill_cal(pred, sl):
 
 # cas_emb:[b,n,d]  cas_mask:[b,n,1]
 
-def hidan(cas_emb, cas_emb1, graph_emb, cas_mask, time_weight, hidden_size, keep_prob):
+def tan(cas_emb, cas_emb1, graph_emb, cas_mask, time_weight, hidden_size, keep_prob):
     cas_encoding = user2user(cas_emb, cas_emb1,graph_emb,cas_mask, hidden_size, keep_prob)     # [b,n,d]
     gra_encoding = gra2user(tf.cast(graph_emb,tf.float32), cas_mask,hidden_size, keep_prob)
     cas_encoding = gra_encoding + cas_encoding
@@ -137,13 +137,13 @@ class Model(object):
                 self.time_lambda = tf.get_variable('time_lambda', [self.n_time_interval+1, self.hidden_size], dtype=tf.float32) #,
                 self.time_weight = tf.nn.embedding_lookup(self.time_lambda, self.time_interval_index)
 
-            with tf.variable_scope("hidan") as scope:
+            with tf.variable_scope("tan") as scope:
             	
-                (self.hidan,self.attention)= hidan(self.cas_emb,self.cas_emb1 , self.graph_emb, self.cas_mask, self.time_weight, self.hidden_size, self.dropout)
+                (self.tan,self.attention)= tan(self.cas_emb,self.cas_emb1 , self.graph_emb, self.cas_mask, self.time_weight, self.hidden_size, self.dropout)
              	
             with tf.variable_scope("loss"):
                 
-                l0 = self.hidan
+                l0 = self.tan
                 self.logits = dense(l0, self.num_nodes, tf.identity, 1.0, 'logits')
                 self.nll = tf.nn.softmax_cross_entropy_with_logits(labels=tf.one_hot(self.labels, self.num_nodes, dtype=tf.float32), logits=self.logits)
                 self.loss = tf.reduce_mean(self.nll,-1)

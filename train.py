@@ -7,6 +7,7 @@ from tqdm import tqdm
 import sys
 import argparse
 from time import time
+
 class Config(object):
     """Configuration of model"""
     batch_size = 32
@@ -25,7 +26,6 @@ class Config(object):
     patience = 5
     freq = 5
     gpu_no = '0'
-    model_name = 'hidan'
     data_name = 'data/tw'
     learning_rate = 0.001
     optimizer = 'adam'
@@ -148,7 +148,7 @@ def train():
         test_macc100 = 0
 
         train_info = "Data: {0:>3}, Model: {1:>3}, Learning Rate: {2:>3.5f}, Embedding Size: {3:>3.0f}, Hidden Size: {4:>3.0f}"
-        print(train_info.format(config.data_name, config.model_name, config.learning_rate, config.embedding_size, config.hidden_size))
+        #print(train_info.format(config.data_name, config.model_name, config.learning_rate, config.embedding_size, config.hidden_size))
         strat = time()
         for i in tqdm(range(input_train.batch_num)):
             epoch_cll += model.train_batch(sess, input_train.next_batch())
@@ -209,7 +209,7 @@ def train():
                 break
 
     with open(data_name + '_res.txt', 'a') as f:
-        f.write(config.model_name + '_' + config.mode + ':\n')
+        #f.write(config.model_name + '_' + config.mode + ':\n')
         f.write('MRR: '+ str(best_mrr/float(test_size)) + '\n')
         f.write('ACC1: '+ str(best_macc1/float(test_size)) + '\n')
         f.write('ACC5: '+ str(best_macc5/float(test_size)) + '\n')

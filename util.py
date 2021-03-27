@@ -5,7 +5,7 @@ from collections import Counter
 import os
 import numpy as np
 
-#读取所有的节点
+
 def read_nodes(filename):
     data = []
     with open(filename, 'r') as f:
@@ -16,7 +16,6 @@ def read_nodes(filename):
         return data
 
 
-#构建用户到用户的传播矩阵
 def read_graph(filename, node_to_id):
     N = len(node_to_id)
     A = np.zeros((N,N), dtype=np.float32)
@@ -32,7 +31,7 @@ def read_graph(filename, node_to_id):
                     A[source_id,target_id] = 1.0
     return A
 
-#节点到节点编号的映射
+
 def build_vocab(filename):
     data = read_nodes(filename)
 
@@ -43,18 +42,11 @@ def build_vocab(filename):
     nodes = list(nodes)
     nodes.insert(0,'-1')
     node_to_id = dict(zip(nodes, range(len(nodes))))
-    # print node_to_id
-    # nodes = list(set(data))
-    # nodes.insert(0,'-1')
-    # node_to_id = {}
-    # index = 0
-    # for node in nodes:
-    #     node_to_id[node] = index
-    #     index += 1 # index begins from 1, 0 represents padding mark
+
 
     return nodes, node_to_id
 
-#序列 每一个序列的长度 序列的个数 总和的长度
+
 def _file_to_node_ids(filename, node_to_id):
     data = []
     len_list = []
@@ -69,7 +61,7 @@ def _file_to_node_ids(filename, node_to_id):
     total_num = np.sum(len_list)
     return (data, len_list, size, total_num)
 
-#传播序列 对应时间 每一个序列的长度 序列的个数 总和的长度
+
 def _file_to_node_ids_withtime(filename, node_to_id):
     cas_data = []
     time_data = []
@@ -88,11 +80,9 @@ def _file_to_node_ids_withtime(filename, node_to_id):
     total_num = np.sum(len_list)
     return (cas_data, time_data, len_list, size, total_num)
 
-#映射序列到序号
 def to_nodes(seq, nodes):
     return list(map(lambda x: nodes[x], seq))
 
-#未加入时间的数据读取
 def read_raw_data(data_path=None):
     train_path = data_path + '-train'
     valid_path = data_path +  '-val'
@@ -105,7 +95,6 @@ def read_raw_data(data_path=None):
 
     return train_data, valid_data,  test_data,  nodes, node_to_id
 
-#加入时间的数据读取
 def read_raw_data_withtime(data_path=None):
     train_path = data_path + '-time' + '-train'
     valid_path = data_path + '-time' + '-val'
@@ -132,7 +121,7 @@ def batch_generator(train_data, batch_size, max_length):
 
     for i in range(batch_len):
         batch_steps = np.array(train_steps[i * batch_size : (i + 1) * batch_size])
-        max_batch_steps = batch_steps.max() #最长的序列值
+        max_batch_steps = batch_steps.max()
         if max_batch_steps > max_length:
             max_batch_steps = max_length
         for j in range(batch_size):
@@ -189,7 +178,7 @@ def batch_generator_withtime(train_data, batch_size, max_length, n_ti, max_time,
     train_time = train_data[1]
     train_steps = train_data[2]
 
-    ti = max_time/n_ti #时间区域间隔
+    ti = max_time/n_ti
 
     batch_len = len(train_seq) // batch_size
 
@@ -208,8 +197,7 @@ def batch_generator_withtime(train_data, batch_size, max_length, n_ti, max_time,
                     start_id = 0
                 padded_seq = np.pad(np.array(seq[start_id:k+1]),(0, max_batch_steps-len(seq[start_id:k+1])),'constant')
                 trunc_time = np.array(time[start_id:k+1])
-                trunc_time = np.ceil((trunc_time[-1] - trunc_time)/(ti*time_unit)) #间隔时间与原本时间的一个收缩，将增加的时间映射到几份
-                #标准化之后 最多达到n个区域 maxtime不超过100
+                trunc_time = np.ceil((trunc_time[-1] - trunc_time)/(ti*time_unit))
                 for _ in range(len(trunc_time)):
                     if trunc_time[_] > n_ti:
                         trunc_time[_] = n_ti
