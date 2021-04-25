@@ -11,3 +11,8 @@ Requirments:
 # Run
 python train.py  
 you can change parameters in train.py
+
+Thanks for
+
+Hierarchical Diffusion Attention Network. Zhitao Wang and Wenjie Li. IJCAI, 2019.
+https://github.com/zhitao-wang/Hierarchical-Diffusion-Attention-Network
