@@ -12,16 +12,16 @@ class Config(object):
     """Configuration of model"""
     batch_size = 32
     test_batch_size = 32
-    embedding_size = 32
+    embedding_size = 64
     hidden_size = 64
     num_epochs = 400
     max_length = 30
     mode = "4"
-    n_time_interval = 40
+    n_time_interval = 10
     max_time = 120
-    time_unit = 10000000
+    time_unit = 1
 
-    l2_weight = 5e-5
+    l2_weight = 1e-5
     dropout = 0.8
     patience = 5
     freq = 5

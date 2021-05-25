@@ -201,7 +201,7 @@ def batch_generator_withtime(train_data, batch_size, max_length, n_ti, max_time,
                 for _ in range(len(trunc_time)):
                     if trunc_time[_] > n_ti:
                         trunc_time[_] = n_ti
-                # trunc_time.astype(int)
+
                 padded_time = np.pad(trunc_time,(0, max_batch_steps-len(trunc_time)),'constant')
                 x.append(padded_seq)
                 y.append(seq[k+1])
